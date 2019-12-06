@@ -12,6 +12,12 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
+        case "getContactIdentifiers":
+            let arguments = call.arguments as! [String:Any]
+            result(getContactIdentifiers())
+        case "getContactById":
+            let arguments = call.arguments as! [String:Any]
+            result(getContactById())
         case "getContacts":
             let arguments = call.arguments as! [String:Any]
             result(getContacts(query: (arguments["query"] as? String), withThumbnails: arguments["withThumbnails"] as! Bool,
@@ -49,6 +55,34 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
         }
     }
 
+    func getContactIdentifiers() -> [String]{
+        var contacts : [CNContact] = []
+        var result = [String]()
+        let store = CNContactStore()
+        var keys = [CNContactFormatter.descriptorForRequiredKeys(for: .fullName)] as [Any]
+        let fetchRequest = CNContactFetchRequest(keysToFetch: keys as! [CNKeyDescriptor])
+
+        // Fetch contacts
+        do{
+            try store.enumerateContacts(with: fetchRequest, usingBlock: { (contact, stop) -> Void in
+                contacts.append(contact)
+            })
+        }
+        catch let error as NSError {
+            print(error.localizedDescription)
+            return result
+        }
+        // Transform the CNContacts into list of identifiers
+        for contact : CNContact in contacts{
+            result.append(contact.identifier)
+        }
+        return result
+    }
+
+    func getContactById() ->[[String:Any]]{
+        return nil
+    }
+
     func getContacts(query : String?, withThumbnails: Bool, photoHighResolution: Bool, phoneQuery: Bool, orderByGivenName: Bool) -> [[String:Any]]{
         
         var contacts : [CNContact] = []
@@ -67,7 +101,8 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
                     CNContactPostalAddressesKey,
                     CNContactOrganizationNameKey,
                     CNContactJobTitleKey,
-                    CNContactBirthdayKey] as [Any]
+                    CNContactBirthdayKey,
+                    CNContactUrlAddressesKey] as [Any]
         
         if(withThumbnails){
             if(photoHighResolution){
@@ -185,7 +220,9 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
                     CNContactPostalAddressesKey,
                     CNContactOrganizationNameKey,
                     CNContactImageDataKey,
-                    CNContactJobTitleKey] as [Any]
+                    CNContactJobTitleKey,
+                    CNContactBirthdayKey,
+                    CNContactUrlAddressesKey] as [Any]
         do {
             // Check if the contact exists
             if let contact = try store.unifiedContact(withIdentifier: identifier, keysToFetch: keys as! [CNKeyDescriptor]).mutableCopy() as? CNMutableContact{

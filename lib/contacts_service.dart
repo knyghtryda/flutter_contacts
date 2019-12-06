@@ -11,6 +11,10 @@ class ContactsService {
   static const MethodChannel _channel =
       MethodChannel('github.com/clovisnicolas/flutter_contacts');
 
+  static Future<Iterable<String>> getContactIdentifiers() async {
+    return await _channel.invokeListMethod('getContactIdentifiers',<String, dynamic>{});
+    }
+  
   /// Fetches all contacts, or when specified, the contacts with a name
   /// matching [query]
   static Future<Iterable<Contact>> getContacts(
