@@ -12,32 +12,39 @@ class ContactsService {
       MethodChannel('github.com/clovisnicolas/flutter_contacts');
 
   static Future<Iterable<String>> getContactIdentifiers() async {
-    return await _channel.invokeListMethod('getContactIdentifiers',<String, dynamic>{});
-    }
-  
+    return await _channel
+        .invokeListMethod('getContactIdentifiers', <String, dynamic>{});
+  }
+
   /// Fetches all contacts, or when specified, the contacts with a name
   /// matching [query]
-  static Future<Iterable<Contact>> getContacts(
-      {String query,
-      bool withThumbnails = true,
-      bool photoHighResolution = true,
-      bool orderByGivenName = true}) async {
+  static Future<Iterable<Contact>> getContacts({
+    String query,
+    bool withThumbnails = true,
+    bool photoHighResolution = true,
+    bool orderByGivenName = true,
+    bool getIosNotes = false,
+  }) async {
     Iterable contacts =
         await _channel.invokeMethod('getContacts', <String, dynamic>{
       'query': query,
       'withThumbnails': withThumbnails,
       'photoHighResolution': photoHighResolution,
-      'orderByGivenName': orderByGivenName
+      'orderByGivenName': orderByGivenName,
+      'getIosNotes': getIosNotes,
     });
     return contacts.map((m) => Contact.fromMap(m));
   }
 
   /// Fetches all contacts, or when specified, the contacts with a name
   /// matching [query]
-  static Future<Iterable<Contact>> getContactsForPhone(String phone,
-      {bool withThumbnails = true,
-      bool photoHighResolution = true,
-      bool orderByGivenName = true}) async {
+  static Future<Iterable<Contact>> getContactsForPhone(
+    String phone, {
+    bool withThumbnails = true,
+    bool photoHighResolution = true,
+    bool orderByGivenName = true,
+    bool getIosNotes = false,
+  }) async {
     if (phone == null || phone.isEmpty) return Iterable.empty();
 
     Iterable contacts =
@@ -45,7 +52,8 @@ class ContactsService {
       'phone': phone,
       'withThumbnails': withThumbnails,
       'photoHighResolution': photoHighResolution,
-      'orderByGivenName': orderByGivenName
+      'orderByGivenName': orderByGivenName,
+      'getIosNotes': getIosNotes,
     });
     return contacts.map((m) => Contact.fromMap(m));
   }
@@ -53,8 +61,8 @@ class ContactsService {
   /// Loads the avatar for the given contact and returns it. If the user does
   /// not have an avatar, then `null` is returned in that slot. Only implemented
   /// on Android.
-  static Future<Uint8List> getAvatar(
-      final Contact contact, {final bool photoHighRes = true}) =>
+  static Future<Uint8List> getAvatar(final Contact contact,
+          {final bool photoHighRes = true}) =>
       _channel.invokeMethod('getAvatar', <String, dynamic>{
         'contact': Contact._toMap(contact),
         'photoHighResolution': photoHighRes,
@@ -94,7 +102,16 @@ class Contact {
     this.androidAccountName,
   });
 
-  String identifier, displayName, givenName, middleName, prefix, suffix, familyName, company, jobTitle, note;
+  String identifier,
+      displayName,
+      givenName,
+      middleName,
+      prefix,
+      suffix,
+      familyName,
+      company,
+      jobTitle,
+      note;
   String androidAccountTypeRaw, androidAccountName;
   AndroidAccountType androidAccountType;
   Iterable<Item> emails = [];
@@ -163,7 +180,7 @@ class Contact {
       "suffix": contact.suffix,
       "company": contact.company,
       "jobTitle": contact.jobTitle,
-      "androidAccountType": contact.androidAccountTypeRaw, 
+      "androidAccountType": contact.androidAccountTypeRaw,
       "androidAccountName": contact.androidAccountName,
       "emails": emails,
       "phones": phones,
@@ -180,31 +197,40 @@ class Contact {
 
   /// The [+] operator fills in this contact's empty fields with the fields from [other]
   operator +(Contact other) => Contact(
-      givenName: this.givenName ?? other.givenName,
-      middleName: this.middleName ?? other.middleName,
-      prefix: this.prefix ?? other.prefix,
-      suffix: this.suffix ?? other.suffix,
-      familyName: this.familyName ?? other.familyName,
-      company: this.company ?? other.company,
-      jobTitle: this.jobTitle ?? other.jobTitle,
-      androidAccountType: this.androidAccountType ?? other.androidAccountType,
-      androidAccountName: this.androidAccountName ?? other.androidAccountName,
-      emails: this.emails == null
-          ? other.emails
-          : this.emails.toSet().union(other.emails?.toSet() ?? Set()).toList(),
-      phones: this.phones == null
-          ? other.phones
-          : this.phones.toSet().union(other.phones?.toSet() ?? Set()).toList(),
-      postalAddresses: this.postalAddresses == null
-          ? other.postalAddresses
-          : this
-              .postalAddresses
-              .toSet()
-              .union(other.postalAddresses?.toSet() ?? Set())
-              .toList(),
-      avatar: this.avatar ?? other.avatar,
-      birthday: this.birthday ?? other.birthday,
-    );
+        givenName: this.givenName ?? other.givenName,
+        middleName: this.middleName ?? other.middleName,
+        prefix: this.prefix ?? other.prefix,
+        suffix: this.suffix ?? other.suffix,
+        familyName: this.familyName ?? other.familyName,
+        company: this.company ?? other.company,
+        jobTitle: this.jobTitle ?? other.jobTitle,
+        androidAccountType: this.androidAccountType ?? other.androidAccountType,
+        androidAccountName: this.androidAccountName ?? other.androidAccountName,
+        emails: this.emails == null
+            ? other.emails
+            : this
+                .emails
+                .toSet()
+                .union(other.emails?.toSet() ?? Set())
+                .toList(),
+        phones: this.phones == null
+            ? other.phones
+            : this
+                .phones
+                .toSet()
+                .union(other.phones?.toSet() ?? Set())
+                .toList(),
+        postalAddresses: this.postalAddresses == null
+            ? other.postalAddresses
+            : this
+                .postalAddresses
+                .toSet()
+                .union(other.postalAddresses?.toSet() ?? Set())
+                .toList(),
+        avatar: this.avatar ?? other.avatar,
+        birthday: this.birthday ?? other.birthday,
+        note: this.note ?? other.note,
+      );
 
   /// Returns true if all items in this contact are identical.
   @override
@@ -260,7 +286,8 @@ class Contact {
     } else if (androidAccountType.startsWith("com.facebook")) {
       return AndroidAccountType.facebook;
     }
-    /// Other account types are not supported on Android 
+
+    /// Other account types are not supported on Android
     /// such as Samsung, htc etc...
     return AndroidAccountType.other;
   }
@@ -380,9 +407,4 @@ class Item {
   static Map _toMap(Item i) => {"label": i.label, "value": i.value};
 }
 
-enum AndroidAccountType {
-  facebook,
-  google,
-  whatsapp,
-  other
-}
+enum AndroidAccountType { facebook, google, whatsapp, other }

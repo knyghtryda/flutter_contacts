@@ -50,6 +50,8 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
             else {
                 result(FlutterError(code: "", message: "Failed to update contact, make sure it has a valid identifier", details: nil))
             }
+        case "getAvatar":
+            result(nil)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -80,10 +82,10 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
     }
 
     func getContactById() ->[[String:Any]]{
-        return nil
+        return [[String:Any]]()
     }
 
-    func getContacts(query : String?, withThumbnails: Bool, photoHighResolution: Bool, phoneQuery: Bool, orderByGivenName: Bool) -> [[String:Any]]{
+    func getContacts(query : String?, withThumbnails: Bool, photoHighResolution: Bool, phoneQuery: Bool, orderByGivenName: Bool, getIosNotes: Bool) -> [[String:Any]]{
         
         var contacts : [CNContact] = []
         var result = [[String:Any]]()
@@ -110,6 +112,10 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
             } else {
                 keys.append(CNContactThumbnailImageDataKey)
             }
+        }
+
+        if(getIosNotes){
+            keys.append(CNContactNoteKey)
         }
         
         let fetchRequest = CNContactFetchRequest(keysToFetch: keys as! [CNKeyDescriptor])
@@ -297,6 +303,7 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
         contact.nameSuffix = dictionary["suffix"] as? String ?? ""
         contact.organizationName = dictionary["company"] as? String ?? ""
         contact.jobTitle = dictionary["jobTitle"] as? String ?? ""
+        contact.note = dictionary["note"] as? String ?? ""
         if let avatarData = (dictionary["avatar"] as? FlutterStandardTypedData)?.data {
             contact.imageData = avatarData
         }
@@ -347,6 +354,7 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
         result["suffix"] = contact.nameSuffix
         result["company"] = contact.organizationName
         result["jobTitle"] = contact.jobTitle
+        result["note"] = contact.note
         if contact.isKeyAvailable(CNContactThumbnailImageDataKey) {
             if let avatarData = contact.thumbnailImageData {
                 result["avatar"] = FlutterStandardTypedData(bytes: avatarData)
