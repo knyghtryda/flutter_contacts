@@ -36,8 +36,9 @@ class _ContactListPageState extends State<ContactListPage> {
     PermissionStatus permissionStatus = await _getContactPermission();
     if (permissionStatus == PermissionStatus.granted) {
       // Load without thumbnails initially.
-      var contacts =
-          (await ContactsService.getContacts(withThumbnails: false)).toList();
+      var contacts = (await ContactsService.getContacts(
+              withThumbnails: false, getIosNotes: true))
+          .toList();
 //      var contacts = (await ContactsService.getContactsForPhone("8554964652"))
 //          .toList();
       setState(() {
