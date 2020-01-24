@@ -88,12 +88,13 @@ class Contact {
     this.postalAddresses,
     this.avatar,
     this.birthday,
+    this.note,
     this.androidAccountType,
     this.androidAccountTypeRaw,
     this.androidAccountName,
   });
 
-  String identifier, displayName, givenName, middleName, prefix, suffix, familyName, company, jobTitle;
+  String identifier, displayName, givenName, middleName, prefix, suffix, familyName, company, jobTitle, note;
   String androidAccountTypeRaw, androidAccountName;
   AndroidAccountType androidAccountType;
   Iterable<Item> emails = [];
@@ -131,6 +132,7 @@ class Contact {
     } catch (e) {
       birthday = null;
     }
+    note = m["note"];
   }
 
   static Map _toMap(Contact contact) {
@@ -167,7 +169,8 @@ class Contact {
       "phones": phones,
       "postalAddresses": postalAddresses,
       "avatar": contact.avatar,
-      "birthday": birthday
+      "birthday": birthday,
+      "note": contact.note,
     };
   }
 
@@ -220,6 +223,7 @@ class Contact {
         this.prefix == other.prefix &&
         this.suffix == other.suffix &&
         this.birthday == other.birthday &&
+        this.note == other.note &&
         DeepCollectionEquality.unordered().equals(this.phones, other.phones) &&
         DeepCollectionEquality.unordered().equals(this.emails, other.emails) &&
         DeepCollectionEquality.unordered()
@@ -241,6 +245,7 @@ class Contact {
       this.prefix,
       this.suffix,
       this.birthday,
+      this.note,
     ].where((s) => s != null));
   }
 
