@@ -21,11 +21,11 @@ public class SwiftContactsServicePlugin: NSObject, FlutterPlugin {
         case "getContacts":
             let arguments = call.arguments as! [String:Any]
             result(getContacts(query: (arguments["query"] as? String), withThumbnails: arguments["withThumbnails"] as! Bool,
-                               photoHighResolution: arguments["photoHighResolution"] as! Bool, phoneQuery:  false, orderByGivenName: arguments["orderByGivenName"] as! Bool ))
+                               photoHighResolution: arguments["photoHighResolution"] as! Bool, phoneQuery:  false, orderByGivenName: arguments["orderByGivenName"] as! Bool, getIosNotes: arguments["getIosNotes"] as! Bool ))
         case "getContactsForPhone":
             let arguments = call.arguments as! [String:Any]
             result(getContacts(query: (arguments["phone"] as? String), withThumbnails: arguments["withThumbnails"] as! Bool,
-                               photoHighResolution: arguments["photoHighResolution"] as! Bool, phoneQuery:  true, orderByGivenName: arguments["orderByGivenName"] as! Bool))
+                               photoHighResolution: arguments["photoHighResolution"] as! Bool, phoneQuery:  true, orderByGivenName: arguments["orderByGivenName"] as! Bool, getIosNotes: arguments["getIosNotes"] as! Bool ))
         case "addContact":
             let contact = dictionaryToContact(dictionary: call.arguments as! [String : Any])
 
