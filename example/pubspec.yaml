@@ -14,7 +14,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  permission_handler: ^4.2.0+hotfix.2
+  permission_handler: ^4.3.0
   contacts_service:
     path: ../
 
