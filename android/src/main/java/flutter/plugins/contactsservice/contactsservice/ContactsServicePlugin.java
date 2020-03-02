@@ -66,7 +66,10 @@ public class ContactsServicePlugin implements MethodCallHandler {
       } case "getContactsForPhone": {
         this.getContactsForPhone((String)call.argument("phone"), (boolean)call.argument("withThumbnails"), (boolean)call.argument("photoHighResolution"), (boolean)call.argument("orderByGivenName"), result);
         break;
-      } case "getAvatar": {
+      } case "getContactById": {
+        this.getContactById((String)call.argument("id"));
+      } 
+      case "getAvatar": {
         final Contact contact = Contact.fromMap((HashMap)call.argument("contact"));
         this.getAvatar(contact, (boolean)call.argument("photoHighResolution"), result);
         break;
@@ -103,6 +106,7 @@ public class ContactsServicePlugin implements MethodCallHandler {
 
   private static final String[] PROJECTION =
           {
+                  ContactsContract.ContactsColumns.LOOKUP_KEY,
                   ContactsContract.Data.CONTACT_ID,
                   ContactsContract.Profile.DISPLAY_NAME,
                   ContactsContract.Contacts.Data.MIMETYPE,

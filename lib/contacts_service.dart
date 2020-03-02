@@ -58,6 +58,13 @@ class ContactsService {
     return contacts.map((m) => Contact.fromMap(m));
   }
 
+  static Future<Contact> getContactById(String id) async {
+    if (id == null || id.isEmpty) return null;
+    var contact = await _channel
+        .invokeMethod('getContactById', <String, dynamic>{'id': id});
+    return Contact.fromMap(contact);
+  }
+
   /// Loads the avatar for the given contact and returns it. If the user does
   /// not have an avatar, then `null` is returned in that slot. Only implemented
   /// on Android.
