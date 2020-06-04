@@ -91,7 +91,7 @@ void main() {
     ));
     expectMethodCall(log, 'deleteContact');
   });
-  
+
   test('should provide initials for contact', () {
     Contact contact1 = Contact(
         givenName: "givenName", familyName: "familyName");

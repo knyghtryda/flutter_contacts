@@ -18,33 +18,30 @@ class ContactsService {
 
   /// Fetches all contacts, or when specified, the contacts with a name
   /// matching [query]
-  static Future<Iterable<Contact>> getContacts({
-    String query,
-    bool withThumbnails = true,
-    bool photoHighResolution = true,
-    bool orderByGivenName = true,
-    bool getIosNotes = false,
-  }) async {
+  static Future<Iterable<Contact>> getContacts(
+      {String query,
+      bool withThumbnails = true,
+      bool photoHighResolution = true,
+      bool orderByGivenName = true,
+      bool iOSLocalizedLabels = true}) async {
     Iterable contacts =
         await _channel.invokeMethod('getContacts', <String, dynamic>{
       'query': query,
       'withThumbnails': withThumbnails,
       'photoHighResolution': photoHighResolution,
       'orderByGivenName': orderByGivenName,
-      'getIosNotes': getIosNotes,
+      'iOSLocalizedLabels': iOSLocalizedLabels,
     });
     return contacts.map((m) => Contact.fromMap(m));
   }
 
-  /// Fetches all contacts, or when specified, the contacts with a name
-  /// matching [query]
-  static Future<Iterable<Contact>> getContactsForPhone(
-    String phone, {
-    bool withThumbnails = true,
-    bool photoHighResolution = true,
-    bool orderByGivenName = true,
-    bool getIosNotes = false,
-  }) async {
+  /// Fetches all contacts, or when specified, the contacts with the phone
+  /// matching [phone]
+  static Future<Iterable<Contact>> getContactsForPhone(String phone,
+      {bool withThumbnails = true,
+      bool photoHighResolution = true,
+      bool orderByGivenName = true,
+      bool iOSLocalizedLabels = true}) async {
     if (phone == null || phone.isEmpty) return Iterable.empty();
 
     Iterable contacts =
@@ -53,7 +50,25 @@ class ContactsService {
       'withThumbnails': withThumbnails,
       'photoHighResolution': photoHighResolution,
       'orderByGivenName': orderByGivenName,
-      'getIosNotes': getIosNotes,
+      'iOSLocalizedLabels': iOSLocalizedLabels,
+    });
+    return contacts.map((m) => Contact.fromMap(m));
+  }
+
+  /// Fetches all contacts, or when specified, the contacts with the email
+  /// matching [email]
+  /// Works only on iOS
+  static Future<Iterable<Contact>> getContactsForEmail(String email,
+      {bool withThumbnails = true,
+        bool photoHighResolution = true,
+        bool orderByGivenName = true,
+        bool iOSLocalizedLabels = true}) async {
+    Iterable contacts = await _channel.invokeMethod('getContactsForEmail',<String,dynamic>{
+      'email': email,
+      'withThumbnails': withThumbnails,
+      'photoHighResolution': photoHighResolution,
+      'orderByGivenName': orderByGivenName,
+      'iOSLocalizedLabels': iOSLocalizedLabels,
     });
     return contacts.map((m) => Contact.fromMap(m));
   }
@@ -86,7 +101,70 @@ class ContactsService {
   /// Updates the [contact] if it has a valid identifier
   static Future updateContact(Contact contact) =>
       _channel.invokeMethod('updateContact', Contact._toMap(contact));
+
+  static Future<Contact> openContactForm({bool iOSLocalizedLabels = true}) async {
+    dynamic result = await _channel.invokeMethod('openContactForm',<String,dynamic>{
+      'iOSLocalizedLabels': iOSLocalizedLabels,
+    });
+   return _handleFormOperation(result);
+  }
+
+  static Future<Contact> openExistingContact(Contact contact, {bool iOSLocalizedLabels = true}) async {
+   dynamic result = await _channel.invokeMethod('openExistingContact',<String,dynamic>{
+     'contact': Contact._toMap(contact),
+     'iOSLocalizedLabels': iOSLocalizedLabels,
+   }, );
+   return _handleFormOperation(result);
+  }
+
+  // Displays the device/native contact picker dialog and returns the contact selected by the user
+  static Future<Contact> openDeviceContactPicker({bool iOSLocalizedLabels = true}) async {
+    dynamic result = await _channel.invokeMethod('openDeviceContactPicker',<String,dynamic>{
+      'iOSLocalizedLabels': iOSLocalizedLabels,
+    });
+    // result contains either :
+    // - an Iterable of contacts containing 0 or 1 contact
+    // - a FormOperationErrorCode value
+    if (result is Iterable) {
+      if (result.isEmpty) {
+        return null;
+      }
+      result = result.first;
+    }
+    return _handleFormOperation(result);
+  }
+
+  static Contact _handleFormOperation(dynamic result) {
+    if(result is int) {
+      switch (result) {
+        case 1:
+          throw FormOperationException(errorCode: FormOperationErrorCode.FORM_OPERATION_CANCELED);
+        case 2:
+          throw FormOperationException(errorCode: FormOperationErrorCode.FORM_COULD_NOT_BE_OPEN);
+        default:
+          throw FormOperationException(errorCode: FormOperationErrorCode.FORM_OPERATION_UNKNOWN_ERROR);
+      }
+    } else if(result is Map) {
+      return Contact.fromMap(result);
+    } else {
+      throw FormOperationException(errorCode: FormOperationErrorCode.FORM_OPERATION_UNKNOWN_ERROR);
+    }
+  }
 }
+
+class FormOperationException implements Exception {
+  final FormOperationErrorCode errorCode;
+
+  const FormOperationException({this.errorCode});
+   String toString() => 'FormOperationException: $errorCode';
+}
+
+enum FormOperationErrorCode {
+  FORM_OPERATION_CANCELED,
+  FORM_COULD_NOT_BE_OPEN,
+  FORM_OPERATION_UNKNOWN_ERROR
+}
+
 
 class Contact {
   Contact({
@@ -293,7 +371,6 @@ class Contact {
     } else if (androidAccountType.startsWith("com.facebook")) {
       return AndroidAccountType.facebook;
     }
-
     /// Other account types are not supported on Android
     /// such as Samsung, htc etc...
     return AndroidAccountType.other;
